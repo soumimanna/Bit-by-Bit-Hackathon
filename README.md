@@ -23,13 +23,12 @@ CW308 UFO board with STM32F303 target
 USB connection to host machine (Linux/WSL with usbipd-win if on Windows)
 
 ### Software
-*Python 3.8+
-*numpy, matplotlib
-*scipy optional (recommended for filtering / medfilt — code falls back if missing)
-*For hardware capture (main.py) you need the corresponding capture library (e.g. ChipWhisperer) and the target firmware (e.g. simpleserial_rsa-CW308_STM32F3.hex). 
+* Python 3.8+
+* numpy, matplotlib
+* scipy optional (recommended for filtering / medfilt — code falls back if missing)
+* For hardware capture (main.py) you need the corresponding capture library (e.g. ChipWhisperer) and the target firmware (e.g. simpleserial_rsa-CW308_STM32F3.hex). 
 Install core Python packages:
-
-pip install numpy matplotlib scipy
+ pip install numpy matplotlib scipy
  plus chipwhisperer or your capture library if required
 ---
 ## Given Bits and attack hints
