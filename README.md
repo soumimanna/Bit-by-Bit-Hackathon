@@ -1,112 +1,92 @@
 # Bit-by-Bit-Hackathon
-# 🔐 RSA Side-Channel Attack – Hackathon 2025
+## Challenge 1: Side-Channel Shenanigans: The RSA Key Recovery Challenge 🕵️‍♂️
+This challenge focuses on recovering a secret RSA private key from a microcontroller by analyzing its power consumption during decryption. The target is a custom 16-bit RSA crypto-module running on an STM32F303 microcontroller.
 
-This repository contains my work for Hackathon Challenge 1: Side-Channel Shenanigans – The RSA Key Recovery Challenge (from Bit-by-Bit: The Side Channel Hackathon 2025).
+### Mission
+The primary objective is to recover the secret 15-bit RSA private key, 
 
-The challenge involves performing power side-channel analysis (SCA) on a lightweight 16-bit RSA crypto-module implemented on an STM32F3 target board, using the ChipWhisperer-Lite platform.
+The process involves:
 
-# 📜 Challenge Description
+Establishing Communication: Write a Python script to communicate with the target device.
 
-From the problem statement:
+Gathering Traces: Send random 2-byte ciphertexts (which must be integers less than the modulus N, 64507) to the device and capture the corresponding power traces during decryption.
 
-The target is an STM32F303 running RSA decryption firmware.
+Key Recovery: Analyze the collected power traces to reconstruct the private key.
 
-Power traces are captured using ChipWhisperer-Lite during decryption operations.
+### Key Details & Verification
+The private key 
+d is 15 bits long.
 
-The implementation uses the Square-and-Multiply algorithm, which leaks key information.
+The Most Significant Bit (MSB) is known to be 
+1.
+The 4 Least Significant Bits (LSBs) are known to be 
+0001.
 
-The secret RSA private key d is 15 bits long with known format:
+The final key structure is 
 
-1??????????0001
+1??????????0001, leaving only 10 bits to be recovered.
 
+Verification: To confirm the correct key has been found, you send the recovered key d to the device as a ciphertext input. If the device returns the plaintext value 
 
-# Objective:
+6267, the mission is successful.
 
-Capture traces while the device performs RSA decryption.
+---
 
-Analyze traces to distinguish between square and multiply operations.
+## Challenge 2: ModelSpy: Identify the CNN model from Side-Channel CPU Traces 🧠
+This challenge is set in a cloud computing environment where multiple users share CPU resources. The goal is to identify which Convolutional Neural Network (CNN) model a co-tenant is running by observing CPU performance counters from your own partition.
 
-Recover the missing 10 bits of the private key d.
+### Scenario
+You can observe system-level telemetry (like cache misses and instruction cycles) using tools like Linux 
 
-Verify the recovered key: when sent as input ciphertext, the module must return plaintext 6267.
+perf. The patterns in this data can act as "side-channel fingerprints" that are unique to specific workloads, such as a CNN inference run.
 
-# 📂 Repository Contents
+### Objective
+Your task is to build a classification algorithm that can analyze unlabelled 
 
-rsa_trace.ipynb → Jupyter Notebook for:
+perf traces from a shared CPU and identify which of the following CNN models is being run by another user:
 
-Programming the target with RSA firmware
+Resnet , AlexNet, VGG , DenseNet , Inception_V3 , MobileNet_V2 , ShuffleNet_V2 
 
-Capturing power traces using ChipWhisperer
+You are provided with a small set of labeled traces for these models to train your algorithm.
 
-Storing ciphertext–trace pairs for later analysis
+### Evaluation
+Solutions are judged on several criteria:
 
-Example trace visualization
+Primary (60%): Classification accuracy on a hidden set of evaluation traces.
 
-Hackathon_2025_problem1.pdf → Official problem statement and rules.
+Secondary (40%): Explainability of the model, its runtime efficiency, and the clarity of the final report.
 
-# 🚀 Workflow
+---
+## Challenge 3: Side-Channel Key Recovery with Neural Networks 🤖
+This challenge addresses a scenario where standard side-channel attacks like CPA fail because only a very limited number of power traces can be collected from the target device (Device A).
 
-## Setup
+### The Problem
+You must recover the first byte of an AES secret key from 
 
-Hardware: CW308 + STM32F303 + ChipWhisperer-Lite
+Device A. You only have a small number of traces 
+(Na) from this device, which is insufficient for a standard CPA attack. To overcome this, you have access to 
+Device B, a clone of Device A that is under your full control.
 
-Firmware: simpleserial_rsa-CW308_STM32F3.hex
+### Methodology: A Profiled Attack
+The attack is performed in two steps:
 
-Trace Acquisition
+###Training Phase (on Device B)
 
-Send random ciphertexts c < N (64507)
+A large number of traces (Np) are collected from Device B, for which the plaintext, ciphertext, and a known key are available.
 
-Capture ~500–5000 traces
+This large, labeled dataset is used to train a neural network. The network learns to predict the probability distribution of an intermediate sensitive variable, 
+Z, from a given power trace.
+A common choice for 
+Z is the Hamming Weight of the S-box output: Z=HW(Sbox(P⊕K)).
 
-Save traces (.npy or .csv) with corresponding ciphertexts
+### Key Recovery Phase (on Device A)
 
-## Analysis
+The trained model is applied to the few traces collected from Device A.
 
-Apply side-channel techniques (Differential Power Analysis / Template Matching)
+For each of the 256 possible key bytes, a 
 
-Exploit leakage from conditional multiply in Square-and-Multiply
+log-likelihood score is calculated by aggregating the model's predictions across all of Device A's traces.
 
-Reconstruct private key d bit by bit
-
-## Verification
-
-Send recovered d as input ciphertext
-
-If response = 6267, key recovery successful 🎉
-
-# 📊 Example Output
-
-Sample captured trace waveform (from rsa_trace.ipynb):
-
-Triggered on decryption start
-
-Distinct patterns for square vs square+multiply
-
-Recovered key format:
-
-d = 1??????????0001
+The key candidates are then ranked by their score, with the highest score indicating the most likely key byte.
 
 
-(Final key revealed in report after analysis step)
-
-# 🛠️ Tools & Libraries
-
-ChipWhisperer
-
-Python 3.8+
-
-NumPy, Pandas, Matplotlib
-
-# 📑 Submission Requirements
-
-Jupyter Notebook with working code (rsa_trace.ipynb)
-
-Problem Statement (Hackathon_2025_problem1.pdf)
-
-Final Report (to be added) with recovered 15-bit RSA private key
-
-# 📌 Status
-
-✔️ Trace acquisition implemented
-✔️ Basic analysis prepared
-⏳ Final key recovery & verification ongoing
