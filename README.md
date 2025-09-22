@@ -1,67 +1,112 @@
 # Bit-by-Bit-Hackathon
-# 🔐 Side-Channel Attack: RSA Key Recovery Challenge
+# 🔐 RSA Side-Channel Attack – Hackathon 2025
 
-This repository contains our solution for **The Side Channel Hackathon 2025 – Problem 1**:  
-Recovering a 15-bit RSA private key from side-channel leakage on a ChipWhisperer target device.
----
+This repository contains my work for Hackathon Challenge 1: Side-Channel Shenanigans – The RSA Key Recovery Challenge (from Bit-by-Bit: The Side Channel Hackathon 2025).
 
-# 📖 Problem Statement
-A vulnerable RSA decryption implementation on an STM32F303 (CW308 target) leaks information via **power consumption**.  
-The goal is to:
-1. Capture power traces while the device decrypts ciphertexts.
-2. Use side-channel analysis (Square-and-Multiply leakage) to recover the private key d.
-3. Verify the recovered key by sending it to the device (correct output = 6267).
----
-## Usage
-1. Capture Power Traces
-Make sure the board is flashed with simpleserial_rsa-CW308_STM32F3.hex.
---
-## Requirements
-### Hardware
-[ChipWhisperer-Lite](https://rtfm.newae.com/ChipWhisperer-Lite/)
-CW308 UFO board with STM32F303 target
-USB connection to host machine (Linux/WSL with usbipd-win if on Windows)
+The challenge involves performing power side-channel analysis (SCA) on a lightweight 16-bit RSA crypto-module implemented on an STM32F3 target board, using the ChipWhisperer-Lite platform.
 
-### Software
-* Python 3.8+
-* numpy, matplotlib
-* scipy optional (recommended for filtering / medfilt — code falls back if missing)
-* For hardware capture (main.py) you need the corresponding capture library (e.g. ChipWhisperer) and the target firmware (e.g. simpleserial_rsa-CW308_STM32F3.hex). 
-Install core Python packages:
- pip install numpy matplotlib scipy
- plus chipwhisperer or your capture library if required
----
-## Given Bits and attack hints
-Use these constraints to reduce search space and increase reliability:
-Key length: d is 15 bits long.
-Known bits:
+# 📜 Challenge Description
 
-MSB = 1
-4 LSBs = 0001
-Key pattern (known + unknown):
+From the problem statement:
 
-1 ? ? ? ? ? ? ? ? ? ? 0 0 0 1
-Only the 10 middle bits are unknown — fix MSB and LSBs in your hypothesis simulation to reduce ambiguity.
+The target is an STM32F303 running RSA decryption firmware.
 
----
+Power traces are captured using ChipWhisperer-Lite during decryption operations.
 
-2. Recover the Private Key
-Run:
-python3 recover_key.py
-This script:
+The implementation uses the Square-and-Multiply algorithm, which leaks key information.
+
+The secret RSA private key d is 15 bits long with known format:
+
+1??????????0001
 
 
-Splits each trace into 15 windows (1 per key bit).
+# Objective:
+
+Capture traces while the device performs RSA decryption.
+
+Analyze traces to distinguish between square and multiply operations.
+
+Recover the missing 10 bits of the private key d.
+
+Verify the recovered key: when sent as input ciphertext, the module must return plaintext 6267.
+
+# 📂 Repository Contents
+
+rsa_trace.ipynb → Jupyter Notebook for:
+
+Programming the target with RSA firmware
+
+Capturing power traces using ChipWhisperer
+
+Storing ciphertext–trace pairs for later analysis
+
+Example trace visualization
+
+Hackathon_2025_problem1.pdf → Official problem statement and rules.
+
+# 🚀 Workflow
+
+## Setup
+
+Hardware: CW308 + STM32F303 + ChipWhisperer-Lite
+
+Firmware: simpleserial_rsa-CW308_STM32F3.hex
+
+Trace Acquisition
+
+Send random ciphertexts c < N (64507)
+
+Capture ~500–5000 traces
+
+Save traces (.npy or .csv) with corresponding ciphertexts
+
+## Analysis
+
+Apply side-channel techniques (Differential Power Analysis / Template Matching)
+
+Exploit leakage from conditional multiply in Square-and-Multiply
+
+Reconstruct private key d bit by bit
+
+## Verification
+
+Send recovered d as input ciphertext
+
+If response = 6267, key recovery successful 🎉
+
+# 📊 Example Output
+
+Sample captured trace waveform (from rsa_trace.ipynb):
+
+Triggered on decryption start
+
+Distinct patterns for square vs square+multiply
+
+Recovered key format:
+
+d = 1??????????0001
 
 
-Detects extra multiplications (bit=1) vs only squaring (bit=0).
-Reconstructs the 15-bit key, using known hints:
-MSB = 1
-4 LSBs = 0001
+(Final key revealed in report after analysis step)
 
+# 🛠️ Tools & Libraries
 
+ChipWhisperer
 
+Python 3.8+
 
-This sends the recovered key d as ciphertext.
+NumPy, Pandas, Matplotlib
 
-If the firmware returns plaintext 6267, the attack succeeded ✅.
+# 📑 Submission Requirements
+
+Jupyter Notebook with working code (rsa_trace.ipynb)
+
+Problem Statement (Hackathon_2025_problem1.pdf)
+
+Final Report (to be added) with recovered 15-bit RSA private key
+
+# 📌 Status
+
+✔️ Trace acquisition implemented
+✔️ Basic analysis prepared
+⏳ Final key recovery & verification ongoing
